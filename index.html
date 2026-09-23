@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>একটা সরি চিঠি</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(160deg, #ffe4ec 0%, #ffd1de 45%, #ffc2d1 100%);
+            font-family: 'Noto Sans Bengali', 'SolaimanLipi', sans-serif;
+            overflow-x: hidden;
+            padding: 24px 16px;
+        }
+
+        .scene {
+            position: relative;
+            width: 320px;
+            max-width: 100%;
+            text-align: center;
+        }
+
+        .hint {
+            color: #b8557a;
+            font-size: 15px;
+            margin-bottom: 22px;
+            opacity: 0.9;
+            letter-spacing: 0.3px;
+        }
+
+        .envelope-wrap {
+            position: relative;
+            width: 300px;
+            max-width: 100%;
+            height: 200px;
+            margin: 150px auto 0;
+            perspective: 1000px;
+        }
+
+        .envelope {
+            position: absolute;
+            inset: 0;
+        }
+
+        .env-back {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #ffb6c9, #ff8fab);
+            border-radius: 8px;
+            box-shadow: 0 12px 30px rgba(214, 51, 108, 0.28);
+        }
+
+        .letter {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            top: 10px;
+            height: 180px;
+            background: #fffaf9;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            transform: translateY(0);
+            transition: transform 1.1s cubic-bezier(.2, .9, .3, 1.1);
+            z-index: 2;
+            padding: 20px 18px;
+            overflow: hidden;
+        }
+
+        .letter-text {
+            font-size: 14.5px;
+            line-height: 1.9;
+            color: #6b3a4a;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.5s;
+        }
+
+        .letter-text.show {
+            opacity: 1;
+        }
+
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(135deg, #ff8fab, #ff6f91);
+            clip-path: polygon(0 0, 100% 0, 50% 85%);
+            transform-origin: top center;
+            transition: transform 0.7s cubic-bezier(.4, 0, .2, 1);
+            z-index: 3;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .flap-open {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        .seal {
+            position: absolute;
+            top: 76px;
+            left: 50%;
+            transform: translate(-50%, 0);
+            width: 48px;
+            height: 48px;
+            background: radial-gradient(circle at 35% 30%, #ff9ebb, #e05780);
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(150, 30, 70, 0.35);
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff0f4;
+            font-size: 20px;
+            transition: transform 0.35s ease, opacity 0.4s ease;
+            cursor: pointer;
+        }
+
+        .seal:active {
+            transform: translate(-50%, 0) scale(0.9);
+        }
+
+        .seal.hidden {
+            opacity: 0;
+            transform: translate(-50%, 0) scale(0.3) rotate(45deg);
+            pointer-events: none;
+        }
+
+        .env-front-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 110px;
+            background: linear-gradient(135deg, #ffb6c9, #ff8fab);
+            clip-path: polygon(0 100%, 100% 100%, 100% 15%, 50% 65%, 0 15%);
+            z-index: 3;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .letter.open {
+            transform: translateY(-150px);
+        }
+
+        .signature {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #c76b8a;
+            text-align: right;
+            opacity: 0;
+            transition: opacity 0.8s ease 1s;
+        }
+
+        .signature.show {
+            opacity: 1;
+        }
+
+        /* Reply box */
+        .reply-box {
+            margin-top: 28px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.8s ease 1.3s, opacity 0.8s ease 1.3s;
+        }
+
+        .reply-box.show {
+            max-height: 400px;
+            opacity: 1;
+        }
+
+        .reply-title {
+            font-size: 14px;
+            color: #b8557a;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .reaction-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .reaction-btn {
+            width: 78px;
+            height: 78px;
+            border: none;
+            border-radius: 50%;
+            background: #fffdfd;
+            border: 1.5px solid #ffbdd0;
+            font-size: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(224, 80, 122, 0.2);
+            transition: transform 0.15s ease, opacity 0.3s, background 0.2s;
+        }
+
+        .reaction-btn:active {
+            transform: scale(0.92);
+        }
+
+        .reaction-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .reaction-btn.picked {
+            background: #ffe0e9;
+            border-color: #ff6f91;
+        }
+
+        .status {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #a15170;
+            min-height: 18px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scene">
+        <div class="hint" id="hint">সিলটাতে ট্যাপ করো 💌</div>
+
+        <div class="envelope-wrap">
+            <div class="envelope" id="envelope">
+                <div class="env-back"></div>
+                <div class="letter" id="letter">
+                    <div class="letter-text" id="letterText">
+                        আসলে জানি না তুমি আমার উপর রাগ করছো কিনা.. আমার মনে হয়েছে আমার উপর রাগ করছো, তাই সরি 🥺
+                        <div class="signature" id="signature">— নিজের ভুল স্বীকার করছি</div>
+                    </div>
+                </div>
+                <div class="env-front-bottom"></div>
+                <div class="flap" id="flap"></div>
+                <div class="seal" id="seal">💌</div>
+            </div>
+        </div>
+
+        <div class="reply-box" id="replyBox">
+            <div class="reply-title">আমি উত্তরের অপেক্ষা করছি, তাড়াতাড়ি মতামত দাও 🌸</div>
+            <div class="reaction-row">
+                <button class="reaction-btn" id="happyBtn" title="Happy">😊</button>
+                <button class="reaction-btn" id="angryBtn" title="Angry">😠</button>
+            </div>
+            <div class="status" id="replyStatus"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const envelope = document.getElementById('envelope');
+        const flap = document.getElementById('flap');
+        const seal = document.getElementById('seal');
+        const letter = document.getElementById('letter');
+        const letterText = document.getElementById('letterText');
+        const signature = document.getElementById('signature');
+        const hint = document.getElementById('hint');
+        const replyBox = document.getElementById('replyBox');
+        const happyBtn = document.getElementById('happyBtn');
+        const angryBtn = document.getElementById('angryBtn');
+        const replyStatus = document.getElementById('replyStatus');
+        let opened = false;
+        let reacted = false;
+
+        // ==========================================================
+        // নিচের YOUR_WEB3FORMS_ACCESS_KEY এর জায়গায় তোমার Web3Forms
+        // এর Access Key বসাও (web3forms.com থেকে ফ্রিতে পাবে)।
+        // ==========================================================
+        const ACCESS_KEY = "cb401def-d3a1-4f0d-bcc2-6b446aa5ee1f";
+
+        seal.addEventListener('click', openEnvelope);
+        seal.addEventListener('touchend', function (e) { e.preventDefault(); openEnvelope(); });
+
+        function openEnvelope() {
+            if (opened) return;
+            opened = true;
+
+            seal.classList.add('hidden');
+            flap.classList.add('flap-open');
+            letter.classList.add('open');
+            hint.style.opacity = '0';
+
+            setTimeout(() => {
+                letterText.classList.add('show');
+                signature.classList.add('show');
+            }, 400);
+
+            setTimeout(() => {
+                replyBox.classList.add('show');
+            }, 900);
+
+            sendToOwner("খাম খোলা হয়েছে 💌", "তোমার পাঠানো সরি খামটা এইমাত্র খোলা হয়েছে।");
+        }
+
+        happyBtn.addEventListener('click', () => sendReaction('happy', "😊"));
+        angryBtn.addEventListener('click', () => sendReaction('angry', "😠"));
+
+        async function sendReaction(type, emoji) {
+            if (reacted) return;
+            reacted = true;
+            happyBtn.disabled = true;
+            angryBtn.disabled = true;
+            (type === 'happy' ? happyBtn : angryBtn).classList.add('picked');
+
+            replyStatus.textContent = "পাঠানো হচ্ছে...";
+            replyStatus.classList.add('show');
+
+            const subject = type === 'happy' ? "সে খুশি রিঅ্যাক্ট করেছে 😊" : "সে রাগান্বিত রিঅ্যাক্ট করেছে 😠";
+            const message = type === 'happy'
+                ? "সে খুশি হয়ে " + emoji + " রিঅ্যাক্ট করেছে।"
+                : "সে রাগ করে " + emoji + " রিঅ্যাক্ট করেছে।";
+
+            const ok = await sendToOwner(subject, message);
+
+            if (ok) {
+                replyStatus.textContent = "পাঠানো হয়েছে ❤️";
+            } else {
+                replyStatus.textContent = "পাঠানো যায়নি";
+                reacted = false;
+                happyBtn.disabled = false;
+                angryBtn.disabled = false;
+            }
+        }
+
+        async function sendToOwner(subject, message) {
+            try {
+                const response = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+                    body: JSON.stringify({
+                        access_key: ACCESS_KEY,
+                        subject: subject,
+                        message: message,
+                        from_name: "Sorry Envelope"
+                    })
+                });
+                const result = await response.json();
+                return !!result.success;
+            } catch (err) {
+                return false;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
